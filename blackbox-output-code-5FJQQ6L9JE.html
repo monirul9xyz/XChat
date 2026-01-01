@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XChat - Professional Chat App</title>
+    <style>
+        /* Global Styles */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+        .container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+        .sidebar {
+            width: 300px;
+            background-color: #2c3e50;
+            color: white;
+            padding: 20px;
+            box-sizing: border-box;
+            overflow-y: auto;
+        }
+        .sidebar h3 {
+            margin-top: 0;
+        }
+        .sidebar ul {
+            list-style: none;
+            padding: 0;
+        }
+        .sidebar li {
+            padding: 10px;
+            cursor: pointer;
+            border-bottom: 1px solid #34495e;
+        }
+        .sidebar li:hover {
+            background-color: #34495e;
+        }
+        .chat-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background-color: white;
+        }
+        .chat-header {
+            background-color: #3498db;
+            color: white;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background-color: #ecf0f1;
+        }
+        .message {
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 10px;
+            max-width: 70%;
+        }
+        .message.sent {
+            background-color: #3498db;
+            color: white;
+            align-self: flex-end;
+            margin-left: auto;
+        }
+        .message.received {
+            background-color: #bdc3c7;
+            color: black;
+        }
+        .message-input {
+            display: flex;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-top: 1px solid #ddd;
+        }
+        .message-input input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .message-input button {
+            padding: 10px 15px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            margin-left: 10px;
+            cursor: pointer;
+        }
+        .auth-section {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f4f4f4;
+        }
+        .auth-form {
+            background-color: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            width: 300px;
+        }
+        .auth-form h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .auth-form input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .auth-form button {
+            width: 100%;
+            padding: 10px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .auth-form p {
+            text-align: center;
+            margin-top: 10px;
+        }
+        .auth-form a {
+            color: #3498db;
+            cursor: pointer;
+        }
+        .hidden {
+            display: none;
+        }
+        .group-form {
+            margin-top: 20px;
+        }
+        .group-form input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .group-form button {
+            width: 100%;
+            padding: 10px;
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .add-user {
+            margin-top: 10px;
+        }
+        .add-user input {
+            width: 70%;
+            padding: 5px;
+        }
+        .add-user button {
+            padding: 5px 10px;
+            background-color: #27ae60;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            .sidebar {
+                width: 100%;
+                height: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Auth Section -->
+    <div id="auth-section" class="auth-section">
+        <div class="auth-form" id="login-form">
+            <h2>Login</h2>
+            <input type="email" id="login-email" placeholder="Email" required>
+            <input type="password" id="login-password" placeholder="Password" required>
+            <button onclick="login()">Login</button>
+            <p>Don't have an account? <a onclick="toggleAuth()">Register</a></p>
+        </div>
+        <div class="auth-form hidden" id="register-form">
+            <h2>Register</h2>
+            <input type="email" id="register-email" placeholder="Email" required>
+            <input type="password" id="register-password" placeholder="Password" required>
+            <button onclick="register()">Register</button>
+            <p>Already have an account? <a onclick="toggleAuth()">Login</a></p>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div id="app" class="hidden">
+        <div class="chat-header">
+            <h1>XChat</h1>
+            <button onclick="logout()">Logout</button>
+        </div>
+        <div class="container">
+            <div class="sidebar">
+                <h3>Users</h3>
+                <ul id="users-list"></ul>
+                <h3>Groups</h3>
+                <ul id="groups-list"></ul>
+                <div class="group-form">
+                    <input type="text" id="group-name" placeholder="Group Name" required>
+                    <button onclick="createGroup()">Create Group</button>
+                </div>
+            </div>
+            <div class="chat-area">
+                <div class="chat-header">
+                    <h2 id="chat-title">Select a chat</h2>
+                    <div id="add-user-section" class="hidden add-user">
+                        <input type="email" id="add-user-email" placeholder="User Email">
+                        <button onclick="addUserToGroup()">Add User</button>
+                    </div>
+                </div>
+                <div class="messages" id="messages"></div>
+                <div class="message-input">
+                    <input type="text" id="message-input" placeholder="Type a message..." onkeypress="handleKeyPress(event)">
+                    <button onclick="sendMessage()">Send</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, where, orderBy, doc, setDoc, getDocs, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+
+        // Firebase Config
+        const firebaseConfig = {
+            apiKey: "AIzaSyCqZy4WHKFAVaNWrA0ePd1D5iGWxaSD2FI",
+            authDomain: "xchat-b77a3.firebaseapp.com",
+            projectId: "xchat-b77a3",
+            storageBucket: "xchat-b77a3.firebasestorage.app",
+            messagingSenderId: "331223537088",
+            appId: "1:331223537088:web:12fe543cd8528d9847e425",
+            measurementId: "G-FYW5BD3449"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let currentUser = null;
+        let currentChatId = null;
+        let currentChatType = null; // 'user' or 'group'
+        let users = [];
+        let groups = [];
+
+        // Auth State Listener
+        onAuthStateChanged(auth, (user) => {
+            console.log('Auth state changed:', user ? 'Logged in as ' + user.email : 'Logged out');
+            if (user) {
+                currentUser = user;
+                document.getElementById('auth-section').classList.add('hidden');
+                document.getElementById('app').classList.remove('hidden');
+                loadUsers();
+                loadGroups();
+            } else {
+                currentUser = null;
+                document.getElementById('auth-section').classList.remove('hidden');
+                document.getElementById('app').classList.add('hidden');
+            }
+        });
+
+        // Toggle Auth Forms
+        function toggleAuth() {
+            document.getElementById('login-form').classList.toggle('hidden');
+            document.getElementById('register-form').classList.toggle('hidden');
+        }
+
+        // Login
+        async function login() {
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            console.log('Attempting login for:', email);
+            try {
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                console.log('Login successful for:', userCredential.user.email);
+            } catch (error) {
+                console.error('Login failed:', error.message);
+                alert('Login failed: ' + error.message);
+            }
+        }
+
+        // Register
+        async function register() {
+            const email = document.getElementById('register-email').value;
+            const password = document.getElementById('register-password').value;
+            console.log('Attempting registration for:', email);
+            try {
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                console.log('Registration successful for:', userCredential.user.email);
+                // Add user to Firestore
+                await setDoc(doc(db, 'users', userCredential.user.uid), {
+                    email: email,
+                    uid: userCredential.user.uid
+                });
+                console.log('User added to Firestore');
+            } catch (error) {
+                console.error('Registration failed:', error.message);
+                alert('Registration failed: ' + error.message);
+            }
+        }
+
+        // Logout
+        async function logout() {
+            try {
+                await signOut(auth);
+                console.log('Logged out');
+            } catch (error) {
+                console.error('Logout error:', error);
+            }
+        }
+
+        // Load Users
+        function loadUsers() {
+            const q = query(collection(db, 'users'), where('uid', '!=', currentUser.uid));
+            onSnapshot(q, (snapshot) => {
+                users = snapshot.docs.map(doc => doc.data());
+                renderUsers();
+            });
+        }
+
+        // Render Users
+        function renderUsers() {
+            const usersList = document.getElementById('users-list');
+            usersList.innerHTML = '';
+            users.forEach(user => {
+                const li = document.createElement('li');
+                li.textContent = user.email;
+                li.onclick = () => selectChat(user.uid, 'user', user.email);
+                usersList.appendChild(li);
+            });
+        }
+
+        // Load Groups
+        function loadGroups() {
+            const q = query(collection(db, 'groups'), where('members', 'array-contains', currentUser.uid));
+            onSnapshot(q, (snapshot) => {
+                groups = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderGroups();
+            });
+        }
+
+        // Render Groups
+        function renderGroups() {
+            const groupsList = document.getElementById('groups-list');
+            groupsList.innerHTML = '';
+            groups.forEach(group => {
+                const li = document.createElement('li');
+                li.textContent = group.name;
+                li.onclick = () => selectChat(group.id, 'group', group.name);
+                groupsList.appendChild(li);
+            });
+        }
+
+        // Create Group
+        async function createGroup() {
+            const name = document.getElementById('group-name').value;
+            if (!name) return;
+            try {
+                await addDoc(collection(db, 'groups'), {
+                    name: name,
+                    members: [currentUser.uid],
+                    createdBy: currentUser.uid
+                });
+                document.getElementById('group-name').value = '';
+            } catch (error) {
+                console.error('Create group error:', error);
+            }
+        }
+
+        // Add User to Group
+        async function addUserToGroup() {
+            const email = document.getElementById('add-user-email').value;
+            if (!email || currentChatType !== 'group') return;
+            try {
+                const userQuery = query(collection(db, 'users'), where('email', '==', email));
+                const userSnapshot = await getDocs(userQuery);
+                if (!userSnapshot.empty) {
+                    const userId = userSnapshot.docs[0].data().uid;
+                    await updateDoc(doc(db, 'groups', currentChatId), {
+                        members: arrayUnion(userId)
+                    });
+                    document.getElementById('add-user-email').value = '';
+                } else {
+                    alert('User not found');
+                }
+            } catch (error) {
+                console.error('Add user error:', error);
+            }
+        }
+
+        // Select Chat
+        function selectChat(chatId, type, title) {
+            currentChatId = chatId;
+            currentChatType = type;
+            document.getElementById('chat-title').textContent = title;
+            document.getElementById('add-user-section').classList.toggle('hidden', type !== 'group');
+            loadMessages();
+        }
+
+        // Load Messages
+        function loadMessages() {
+            if (!currentChatId) return;
+            const q = query(collection(db, 'messages'), where('chatId', '==', currentChatId), orderBy('timestamp'));
+            onSnapshot(q, (snapshot) => {
+                const messagesDiv = document.getElementById('messages');
+                messagesDiv.innerHTML = '';
+                snapshot.forEach(doc => {
+                    const msg = doc.data();
+                    const msgDiv = document.createElement('div');
+                    msgDiv.className = 'message ' + (msg.senderId === currentUser.uid ? 'sent' : 'received');
+                    msgDiv.textContent = msg.text;
+                    messagesDiv.appendChild(msgDiv);
+                });
+                messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            });
+        }
+
+        // Send Message
+        async function sendMessage() {
+            const input = document.getElementById('message-input');
+            const text = input.value.trim();
+            if (!text || !currentChatId) return;
+            try {
+                await addDoc(collection(db, 'messages'), {
+                    chatId: currentChatId,
+                    senderId: currentUser.uid,
+                    text: text,
+                    timestamp: new Date()
+                });
+                input.value = '';
+            } catch (error) {
+                console.error('Send message error:', error);
+            }
+        }
+
+        // Handle Enter Key
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        // Expose functions to global scope for onclick
+        window.toggleAuth = toggleAuth;
+        window.login = login;
+        window.register = register;
+        window.logout = logout;
+        window.createGroup = createGroup;
+        window.addUserToGroup = addUserToGroup;
+        window.sendMessage = sendMessage;
+        window.handleKeyPress = handleKeyPress;
+    </script>
+</body>
+</html>
